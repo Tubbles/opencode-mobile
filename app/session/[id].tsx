@@ -11,6 +11,7 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  Keyboard,
 } from "react-native"
 import { useLocalSearchParams, Stack, useRouter, useFocusEffect } from "expo-router"
 import { Ionicons } from "@expo/vector-icons"
@@ -85,6 +86,7 @@ export default function SessionScreen() {
   const [input, setInput] = useState("")
   const [attachments, setAttachments] = useState<Attachment[]>([])
   const [showInfo, setShowInfo] = useState(false)
+  const [keyboardHeight, setKeyboardHeight] = useState(0)
 
   const {
     currentSession,
@@ -152,6 +154,25 @@ export default function SessionScreen() {
     if (!speech.error) return
     Alert.alert(t("session.alerts.speechErrorTitle"), t("session.alerts.speechErrorMessage"))
   }, [speech.error, t])
+
+  // Track keyboard height on Android. The built-in KeyboardAvoidingView
+  // under-measures with edge-to-edge enabled (the system reports a smaller
+  // keyboard frame than what actually covers the screen), leaving the input
+  // partially hidden behind tall keyboards. We listen to keyboard events
+  // directly and apply the exact reported height as bottom padding.
+  useEffect(() => {
+    if (Platform.OS !== "android") return
+    const showSub = Keyboard.addListener("keyboardDidShow", (e) => {
+      setKeyboardHeight(e.endCoordinates.height)
+    })
+    const hideSub = Keyboard.addListener("keyboardDidHide", () => {
+      setKeyboardHeight(0)
+    })
+    return () => {
+      showSub.remove()
+      hideSub.remove()
+    }
+  }, [])
 
   // Slash command state
   const slashActive = input.startsWith("/") && !input.includes(" ")
@@ -593,19 +614,11 @@ export default function SessionScreen() {
 
       <KeyboardAvoidingView
         style={[s.container, isDark && s.containerDark]}
-        // Both platforms use "padding" so the composer/toolbar is pushed up
-        // above the keyboard via JS-measured keyboard height.
-        //
-        // Android previously relied on the native android:windowSoftInputMode
-        // (adjustResize, see AndroidManifest.xml) with behavior={undefined}
-        // to let the OS resize the window (see #70/#53). Since adopting
-        // Expo's mandatory edge-to-edge display, Android no longer resizes
-        // the window when the keyboard opens — the system assumes insets are
-        // handled dynamically — so adjustResize became a no-op and the
-        // bottom toolbar + input were left completely hidden behind the
-        // keyboard (#147). "padding" restores avoidance without depending
-        // on native resize.
-        behavior="padding"
+        // iOS uses "padding" with a vertical offset for the nav header.
+        // Android uses a custom keyboard height listener instead (see
+        // useEffect above) because KeyboardAvoidingView under-measures
+        // the keyboard frame with edge-to-edge enabled.
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
         keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
       >
         {/* Session info pulldown */}
@@ -782,7 +795,19 @@ export default function SessionScreen() {
 
         {/* Input */}
         <View
-          style={[s.inputContainer, isDark && s.inputContainerDark, { paddingBottom: Math.max(12, insets.bottom) }]}
+          style={[
+            s.inputContainer,
+            isDark && s.inputContainerDark,
+            {
+              // On Android, use the exact keyboard height from the keyboard
+              // event. On iOS, KeyboardAvoidingView handles the keyboard and
+              // we just need safe-area padding.
+              paddingBottom:
+                Platform.OS === "android"
+                  ? Math.max(keyboardHeight, 12)
+                  : Math.max(12, insets.bottom),
+            },
+          ]}
         >
           <View style={s.inputRow}>
             {/* Attach button */}
