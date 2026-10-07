@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "OpenCode",
+    "name": "OpenCode T",
     "slug": "opencode-mobile",
     "version": "0.4.15",
     "orientation": "portrait",
@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "cc.agentlabs.opencode",
+      "bundleIdentifier": "se.tubbles.opencode",
       "buildNumber": "1",
       "entitlements": {
         "aps-environment": "production"
@@ -34,7 +34,7 @@
       }
     },
     "android": {
-      "package": "cc.agentlabs.opencode",
+      "package": "se.tubbles.opencode",
       "versionCode": 42,
       "usesCleartextTraffic": true,
       "adaptiveIcon": {

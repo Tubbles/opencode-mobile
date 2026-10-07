@@ -1,4 +1,4 @@
-package cc.agentlabs.opencode
+package se.tubbles.opencode
 
 import android.app.Application
 import android.content.res.Configuration

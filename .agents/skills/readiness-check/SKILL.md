@@ -11,8 +11,8 @@ Single command that answers one question: **is OpenCode Mobile production ready?
 
 "Production ready" has a precise definition of done:
 
-- The app is **PUBLISHED on Google Play** (`cc.agentlabs.opencode`).
-- The app is **PUBLISHED on F-Droid mainline** (`f-droid.org/packages/cc.agentlabs.opencode`).
+- The app is **PUBLISHED on Google Play** (`se.tubbles.opencode`).
+- The app is **PUBLISHED on F-Droid mainline** (`f-droid.org/packages/se.tubbles.opencode`).
 - The **self-hosted F-Droid repo** serves the latest APK.
 - The **app builds and tests green** (typecheck + node:test suite).
 - The **web presence** (landing, guide, privacy, sitemap, robots, OG image, QR codes) is all live.
@@ -47,12 +47,12 @@ Gates are grouped. REQUIRED gates decide the verdict; nice-to-have gates only WA
   - `npm run typecheck` exits clean.
   - `npm test` passes.
 - **B. F-Droid self-hosted repo LIVE** (REQUIRED)
-  - `https://dzianisv.github.io/opencode-mobile/fdroid/repo/index-v1.json` parses and contains `cc.agentlabs.opencode`; prints served versionName.
+  - `https://dzianisv.github.io/opencode-mobile/fdroid/repo/index-v1.json` parses and contains `se.tubbles.opencode`; prints served versionName.
   - `https://github.com/dzianisv/opencode-mobile/releases/latest` returns 200/3xx.
 - **C. F-Droid MAINLINE published** (REQUIRED, headline)
-  - `https://f-droid.org/packages/cc.agentlabs.opencode/` returns 200. A 404 means not yet merged on f-droid.org → this gate FAILS. Do not confuse with the self-hosted gate (B).
+  - `https://f-droid.org/packages/se.tubbles.opencode/` returns 200. A 404 means not yet merged on f-droid.org → this gate FAILS. Do not confuse with the self-hosted gate (B).
 - **D. Google Play PUBLISHED** (REQUIRED, headline)
-  - `https://play.google.com/store/apps/details?id=cc.agentlabs.opencode` returns 200 with a real store page. While in-review/draft it 404s → gate FAILS.
+  - `https://play.google.com/store/apps/details?id=se.tubbles.opencode` returns 200 with a real store page. While in-review/draft it 404s → gate FAILS.
 - **E. Web presence** (REQUIRED)
   - landing `/`, `/guide/`, `/privacy/`, `sitemap.xml`, `robots.txt`, `og.png`, `fdroid-qr.png`, `apk-qr.png` under `https://dzianisv.github.io/opencode-mobile/` all return 200.
 - **F. Repo discoverability** (nice-to-have, WARN only)

@@ -14,7 +14,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
-const APP_ID = "cc.agentlabs.opencode";
+const APP_ID = "se.tubbles.opencode";
 const SITE = "https://dzianisv.github.io/opencode-mobile";
 const FDROID_INDEX = `${SITE}/fdroid/repo/index-v1.json`;
 const RELEASES = "https://github.com/dzianisv/opencode-mobile/releases/latest";
