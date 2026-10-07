@@ -799,12 +799,17 @@ export default function SessionScreen() {
             s.inputContainer,
             isDark && s.inputContainerDark,
             {
-              // On Android, use the exact keyboard height from the keyboard
-              // event. On iOS, KeyboardAvoidingView handles the keyboard and
-              // we just need safe-area padding.
+              // On Android, use the keyboard height from the keyboard event
+              // plus a safety margin. The reported endCoordinates.height can
+              // under-measure on some keyboards (suggestion bars, accessory
+              // views, large keyboards), so add 40px to ensure the input is
+              // fully visible. When the keyboard is closed, use safe-area
+              // padding for the navigation bar.
               paddingBottom:
                 Platform.OS === "android"
-                  ? Math.max(keyboardHeight, 12)
+                  ? keyboardHeight > 0
+                    ? keyboardHeight + 40
+                    : Math.max(12, insets.bottom)
                   : Math.max(12, insets.bottom),
             },
           ]}
