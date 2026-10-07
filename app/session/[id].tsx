@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   useColorScheme,
+  useWindowDimensions,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
@@ -78,6 +79,7 @@ export default function SessionScreen() {
   const colorScheme = useColorScheme()
   const isDark = colorScheme === "dark"
   const insets = useSafeAreaInsets()
+  const windowHeight = useWindowDimensions().height
   const { t } = useTranslation()
 
   const flatListRef = useRef<FlatList>(null)
@@ -86,7 +88,7 @@ export default function SessionScreen() {
   const [input, setInput] = useState("")
   const [attachments, setAttachments] = useState<Attachment[]>([])
   const [showInfo, setShowInfo] = useState(false)
-  const [keyboardHeight, setKeyboardHeight] = useState(0)
+  const [keyboardScreenY, setKeyboardScreenY] = useState(0)
 
   const {
     currentSession,
@@ -155,24 +157,36 @@ export default function SessionScreen() {
     Alert.alert(t("session.alerts.speechErrorTitle"), t("session.alerts.speechErrorMessage"))
   }, [speech.error, t])
 
-  // Track keyboard height on Android. The built-in KeyboardAvoidingView
-  // under-measures with edge-to-edge enabled (the system reports a smaller
-  // keyboard frame than what actually covers the screen), leaving the input
-  // partially hidden behind tall keyboards. We listen to keyboard events
-  // directly and apply the exact reported height as bottom padding.
+  // Track keyboard position on Android. The built-in KeyboardAvoidingView
+  // under-measures with edge-to-edge enabled. Instead of relying on the
+  // reported keyboard height (which can be off for large keyboards or
+  // keyboards with suggestion bars), we use the screenY coordinate from
+  // the keyboard event to calculate the exact available space.
+  //
+  // screenY is the Y coordinate of the keyboard's top edge on the screen.
+  // The keyboard height is therefore windowHeight - screenY, which gives
+  // us the exact space the keyboard occupies, regardless of keyboard type.
   useEffect(() => {
     if (Platform.OS !== "android") return
     const showSub = Keyboard.addListener("keyboardDidShow", (e) => {
-      setKeyboardHeight(e.endCoordinates.height)
+      setKeyboardScreenY(e.endCoordinates.screenY)
     })
     const hideSub = Keyboard.addListener("keyboardDidHide", () => {
-      setKeyboardHeight(0)
+      setKeyboardScreenY(0)
     })
     return () => {
       showSub.remove()
       hideSub.remove()
     }
   }, [])
+
+  // Effective keyboard height: the distance from the bottom of the window
+  // to where the keyboard starts on screen. This is more accurate than
+  // endCoordinates.height for keyboards that under-report their size.
+  const effectiveKeyboardHeight = useMemo(
+    () => (keyboardScreenY > 0 ? windowHeight - keyboardScreenY : 0),
+    [keyboardScreenY, windowHeight],
+  )
 
   // Slash command state
   const slashActive = input.startsWith("/") && !input.includes(" ")
@@ -799,16 +813,15 @@ export default function SessionScreen() {
             s.inputContainer,
             isDark && s.inputContainerDark,
             {
-              // On Android, use the keyboard height from the keyboard event
-              // plus a safety margin. The reported endCoordinates.height can
-              // under-measure on some keyboards (suggestion bars, accessory
-              // views, large keyboards), so add 40px to ensure the input is
-              // fully visible. When the keyboard is closed, use safe-area
-              // padding for the navigation bar.
+              // On Android, calculate the exact keyboard height from the
+              // keyboard event's screenY (where the keyboard starts on
+              // screen) and the window height. This avoids hardcoded values
+              // and adapts to any keyboard size. When the keyboard is
+              // closed, use safe-area padding for the navigation bar.
               paddingBottom:
                 Platform.OS === "android"
-                  ? keyboardHeight > 0
-                    ? keyboardHeight + 40
+                  ? effectiveKeyboardHeight > 0
+                    ? effectiveKeyboardHeight
                     : Math.max(12, insets.bottom)
                   : Math.max(12, insets.bottom),
             },
